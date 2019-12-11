@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["CONST",""],["ENUM_VARIANT",""],["FUNCTION",""],["RECORD_FIELD",""],["STATIC",""],["TUPLE_FIELD",""],["TYPE_ALIAS",""],["TYPE_PARAM",""]],"struct":[["AstPtrPolicy","XXX: AST Nodes and SyntaxNodes have identity equality semantics: nodes are equal if they point to exactly the same object."]]});
