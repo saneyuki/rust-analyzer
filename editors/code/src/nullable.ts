@@ -6,7 +6,7 @@ function isNotNull<T>(input: Nullable<T>): input is NotNull<T> {
     return input !== null;
 }
 
-function expectNotNull<T>(input: Nullable<T>, msg: string): NotNull<T> {
+export function expectNotNull<T>(input: Nullable<T>, msg: string): NotNull<T> {
     if (isNotNull(input)) {
         return input;
     }

@@ -1,6 +1,8 @@
-// @ts-nocheck
+import type { RecursiveMemoryLayout } from "../lsp_ext";
+import { type Nullable, expectNotNull } from "../nullable";
+import { unwrapUndefinable } from "../undefinable";
 
-export function showMemoryLayout(data): void {
+export function showMemoryLayout(data: Nullable<RecursiveMemoryLayout>): void {
     if (!(data && data.nodes.length)) {
         document.body.innerText = "Not Available";
         return;
@@ -18,7 +20,7 @@ export function showMemoryLayout(data): void {
 
     let height = window.innerHeight - 64;
 
-    window.addEventListener("resize", (e) => {
+    window.addEventListener("resize", (_e) => {
         const newHeight = window.innerHeight - 64;
         height = newHeight;
         container.classList.remove("trans");
@@ -36,7 +38,10 @@ export function showMemoryLayout(data): void {
     container.classList.add("trans");
     document.body.appendChild(container);
 
-    const tooltip = document.getElementById("tooltip");
+    const tooltip = expectNotNull(
+        document.getElementById("tooltip"),
+        "#toolip must be there on calling this"
+    );
 
     let y = 0;
     let zoom = 1.0;
@@ -44,32 +49,35 @@ export function showMemoryLayout(data): void {
     const table = document.createElement("table");
     table.classList.add("trans");
     container.appendChild(table);
-    const rows = [];
 
-    function nodeT(idx, depth, offset) {
+    const rows: Array<{
+        el: HTMLTableRowElement;
+        offset: 0;
+    }> = [];
+
+    const nodeSetup = function nodeT(idx: number, depth: number, offset: number): void {
         if (!rows[depth]) {
             rows[depth] = { el: document.createElement("tr"), offset: 0 };
         }
 
-        if (rows[depth].offset < offset) {
+        const row = unwrapUndefinable(rows[depth]);
+
+        if (row.offset < offset) {
             const pad = document.createElement("td");
-            pad.colSpan = offset - rows[depth].offset;
-            rows[depth].el.appendChild(pad);
-            rows[depth].offset += offset - rows[depth].offset;
+            pad.colSpan = offset - row.offset;
+            row.el.appendChild(pad);
+            row.offset += offset - row.offset;
         }
 
         const td = document.createElement("td");
-        td.innerHTML =
-            "<p><span>" +
-            data.nodes[idx].itemName +
-            ":</span> <b>" +
-            data.nodes[idx].typename +
-            "</b></p>";
+        const node = unwrapUndefinable(data.nodes[idx]);
 
-        td.colSpan = data.nodes[idx].size;
+        td.innerHTML = "<p><span>" + node.itemName + ":</span> <b>" + node.typename + "</b></p>";
 
-        td.addEventListener("mouseover", (e) => {
-            const node = data.nodes[idx];
+        td.colSpan = node.size;
+
+        td.addEventListener("mouseover", (_e) => {
+            const node = unwrapUndefinable(data.nodes[idx]);
             tooltip.innerHTML =
                 node.itemName +
                 ": <b>" +
@@ -92,32 +100,28 @@ export function showMemoryLayout(data): void {
         });
         td.addEventListener("mouseleave", (_) => (tooltip.style.display = "none"));
 
-        const totalOffset = rows[depth].offset;
-        td.addEventListener("dblclick", (e) => {
-            const node = data.nodes[idx];
-            zoom = data.nodes[0].size / node.size;
-            y = (-totalOffset / data.nodes[0].size) * zoom;
-            x = 0;
+        const totalOffset = row.offset;
+        td.addEventListener("dblclick", (_e) => {
+            const node0 = unwrapUndefinable(data.nodes[0]);
+            zoom = node0.size / node.size;
+            y = (-totalOffset / node0.size) * zoom;
             locate();
         });
 
-        rows[depth].el.appendChild(td);
-        rows[depth].offset += data.nodes[idx].size;
+        row.el.appendChild(td);
+        row.offset += node.size;
 
-        if (data.nodes[idx].childrenStart !== -1) {
-            for (let i = 0; i < data.nodes[idx].childrenLen; i++) {
-                if (data.nodes[data.nodes[idx].childrenStart + i].size) {
-                    nodeT(
-                        data.nodes[idx].childrenStart + i,
-                        depth + 1,
-                        offset + data.nodes[data.nodes[idx].childrenStart + i].offset
-                    );
+        if (node.childrenStart !== -1) {
+            for (let i = 0; i < node.childrenLen; i++) {
+                const childNode = unwrapUndefinable(data.nodes[node.childrenStart + i]);
+                if (childNode.size) {
+                    nodeT(node.childrenStart + i, depth + 1, offset + childNode.offset);
                 }
             }
         }
-    }
+    };
 
-    nodeT(0, 0, 0);
+    nodeSetup(0, 0, 0);
 
     for (const row of rows) table.appendChild(row.el);
 
@@ -125,11 +129,12 @@ export function showMemoryLayout(data): void {
     grid.classList.add("grid");
     container.appendChild(grid);
 
-    for (let i = 0; i < data.nodes[0].size / 8 + 1; i++) {
+    const node = unwrapUndefinable(data.nodes[0]);
+    for (let i = 0; i < node.size / 8 + 1; i++) {
         const el = document.createElement("div");
         el.classList.add("grid-line");
-        el.style.top = (i / (data.nodes[0].size / 8)) * 100 + "%";
-        el.innerText = i * 8;
+        el.style.top = (i / (node.size / 8)) * 100 + "%";
+        el.innerText = String(i * 8);
         grid.appendChild(el);
     }
 

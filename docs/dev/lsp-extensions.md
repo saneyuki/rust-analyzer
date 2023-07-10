@@ -898,7 +898,7 @@ Returns all crates from this workspace, so it can be used create a viewTree to h
 ```typescript
 export interface RecursiveMemoryLayoutNode = {
     /// Name of the item, or [ROOT], `.n` for tuples
-    item_name: string;
+    itemName: string;
     /// Full name of the type (type aliases are ignored)
     typename: string;
     /// Size of the type in bytes
@@ -908,11 +908,11 @@ export interface RecursiveMemoryLayoutNode = {
     /// Offset of the type relative to its parent (or 0 if its the root)
     offset: number;
     /// Index of the node's parent (or -1 if its the root)
-    parent_idx: number;
+    parentIdx: number;
     /// Index of the node's children (or -1 if it does not have children)
-    children_start: number;
+    childrenStart: number;
     /// Number of child nodes (unspecified it does not have children)
-    children_len: number;
+    childrenLen: number;
 };
 
 export interface RecursiveMemoryLayout = {
